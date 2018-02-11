@@ -5,6 +5,7 @@
 [packages]
 
 django = "*"
+"delegator.py" = "*"
 
 
 [dev-packages]
