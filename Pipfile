@@ -4,4 +4,10 @@
 
 [packages]
 
-Django = "*"
+django = "*"
+
+
+[dev-packages]
+
+artifacts = {path = ".", editable = true}
+ipython = "*"
