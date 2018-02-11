@@ -7,35 +7,26 @@ class WebpackBuilder:
     """
     """
 
-    def __init__(self, working_dir, webpack=None, configuration=None):
+    def __init__(self, working_dir, webpack, configuration, node):
         """
         """
         self.working_dir = working_dir
-        self.webpack = webpack or os.path.join(
-            self.working_dir, 'node_modules/webpack/bin/webpack.js',
-        )
-
-        _configuration = configuration
-
-        if _configuration:
-            _configuration = os.path.join(
-                _configuration, 'node_modules/webpack/bin/webpack.js',
-            )
-
-        self.configuration = _configuration
+        self.webpack = webpack
+        self.configuration = configuration
+        self.node = node
 
     @property
-    def cmd(self):
+    def _cmd(self):
         """
         """
-        args = ['node', self.webpack, '--json']
+        cmd = [self.node, self.webpack, '--json']
 
         if self.configuration:
-            args += ['-c', self.configuration]
+            cmd += ['-c', self.configuration]
         else:
-            args += [self.working_dir]
+            cmd += [self.working_dir]
 
-        return args
+        return cmd
 
     @property
     def artifacts(self):
@@ -48,12 +39,12 @@ class WebpackBuilder:
             for chunk_file in chunk['files']:
                 yield os.path.join(output_path, chunk_file)
 
-    def run(self):
+    def build(self):
         """
         """
         if not hasattr(self, '_process'):
             self._process = subprocess.run(
-                self.cmd,
+                self._cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 cwd=self.working_dir,
