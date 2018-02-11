@@ -1,5 +1,7 @@
+from collections import OrderedDict
 from django.contrib.staticfiles.storage import ManifestStaticFilesStorage
-import delegator
+
+from . import builders
 
 
 WEBPACK_DIRS = [
@@ -8,19 +10,27 @@ WEBPACK_DIRS = [
 
 
 class ArtifactsStorage(ManifestStaticFilesStorage):
+    """
+    """
     def post_process(self, paths, **options):
+        """
+        """
+        _paths = OrderedDict()
+
         for path in WEBPACK_DIRS:
             webpack_dir_path = self.path(path)
-            webpack_bin_path = f'{webpack_dir_path}/node_modules/webpack/bin/webpack.js'
-            print(f'Running webpack in "{webpack_dir_path}"')
-            w = delegator.run(
-                ['node', webpack_bin_path, '.'], cwd=webpack_dir_path,
-            )
-            import pdb
-            pdb.set_trace()
-            print(w.return_code)
-            print(w.out)
-            print(w.err)
+            builder = builders.WebpackBuilder(webpack_dir_path)
+            builder.run()
 
-        # return super().post_process(paths, **options)
-        return []
+            for artifact in builder.artifacts:
+                _paths[artifact] = (self, artifact)
+                original_path = f'(webpack build at {path})'
+                processed_path = artifact
+                processed = True
+                yield original_path, processed_path, processed
+
+        for path in paths.keys():
+            if '/node_modules/' not in path:
+                _paths[path] = paths[path]
+
+        yield from super().post_process(_paths, **options)

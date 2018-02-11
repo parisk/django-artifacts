@@ -4,8 +4,7 @@
 
 [packages]
 
-django = "*"
-"delegator.py" = "*"
+Django = "*"
 
 
 [dev-packages]
