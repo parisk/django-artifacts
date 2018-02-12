@@ -4,7 +4,7 @@ import re
 
 from django.contrib.staticfiles.storage import ManifestStaticFilesStorage
 
-from . import builders, finders
+from . import environments, finders
 from .settings import artifacts_settings
 
 
@@ -30,42 +30,40 @@ class ArtifactsStorage(ManifestStaticFilesStorage):
         )
 
     @property
-    def _builders(self):
+    def environments(self):
         """
         """
-        for finder in finders.get_webpack_finders():
+        for finder in finders.get_finders():
             for webpack_paths, storage in finder.list():
                 webpack_root, webpack_bin, webpack_config = webpack_paths
-                builder = builders.WebpackBuilder(
+                environment = environments.WebpackBuildEnvironment(
                     storage,
                     webpack_root,
                     webpack_bin,
                     webpack_config,
                     artifacts_settings.NODE_PATH,
                 )
-                yield builder
+                yield environment
 
     def build_artifacts(self):
         """
         """
-        for builder in self._builders:
-            builder.build()
-
-            yield from [(builder, artifact) for artifact in builder.artifacts]
+        for environment in self.environments:
+            artifacts = environment.build_artifacts()
+            yield from [(environment, artifact) for artifact in artifacts]
 
     def post_process(self, paths, **options):
         """
         """
-        _paths = OrderedDict()
+        next_paths = OrderedDict()
 
-        for builder, artifact in self._artifacts:
-            _paths[artifact] = self, artifact
-            original_path = f'[webpack build in {builder._webpack_root}]'
-            processed_path = artifact
-            processed = True
-            yield original_path, processed_path, processed
+        for environment, artifact in self.build_artifacts():
+            next_paths[artifact] = self, artifact
+
+            # Below we are yielding: original_path, processed_path, processed
+            yield environment.label, artifact, True
 
         for path in self._sieve_paths_not_for_hashing(paths):
-            _paths[path] = paths[path]
+            next_paths[path] = paths[path]
 
-        yield from super().post_process(_paths, **options)
+        yield from super().post_process(next_paths, **options)

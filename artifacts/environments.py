@@ -3,7 +3,7 @@ import os
 import subprocess
 
 
-class WebpackBuilder:
+class WebpackBuildEnvironment:
     """
     """
 
@@ -15,6 +15,10 @@ class WebpackBuilder:
         self.webpack_bin = webpack_bin
         self.webpack_config = webpack_config
         self.node_path = node_path
+
+    @property
+    def label(self):
+        return f'[webpack build environment in {self._webpack_root}]'
 
     @property
     def webpack_root(self):
@@ -43,8 +47,9 @@ class WebpackBuilder:
             output_path = os.path.join(self._webpack_root, output_path)
 
         for chunk in json_output['chunks']:
-            for chunk_file in chunk['files']:
-                yield os.path.join(output_path, chunk_file)
+            yield from [
+                os.path.join(output_path, _file) for _file in chunk['files']
+            ]
 
     def build(self):
         """
@@ -58,3 +63,9 @@ class WebpackBuilder:
             )
 
         return bool(self._process.returncode)
+
+    def build_artifacts(self):
+        """
+        """
+        self.build()
+        yield from self.artifacts

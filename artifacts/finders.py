@@ -61,27 +61,24 @@ class WebpackAutoFinder(BaseFinder):
             if self.storage.exists(package_json_path):
                 if self.package_depends_on_webpack(package_json_path):
                     webpack_paths = self.get_webpack_paths(directory)
-
                     yield webpack_paths, self.storage
 
 
-def get_webpack_finders():
+def get_finders():
     """
     """
-    finders =  [
-        get_finder(Finder) for Finder in artifacts_settings.WEBPACK_FINDERS
-    ]
-
-    yield from finders
+    finder_classes = artifacts_settings.BUILD_ENVIRONMENT_FINDERS
+    yield from [get_finder(finder_class) for finder_class in finder_classes]
 
 
 @functools.lru_cache(maxsize=None)
-def get_finder(Finder):
+def get_finder(finder_class):
     """
-    Return an instance of the given Finder class, after verifying that it is
-    a subclass of BaseFinder
+    Return an instance of the given `finder_class`, after verifying that it is
+    a subclass of BaseFinder.
     """
-    if not issubclass(Finder, BaseFinder):
+    if not issubclass(finder_class, BaseFinder):
         msg = f'Finder "{Finder}" is not a subclass of "{BaseFinder}"'
         raise ImproperlyConfigured(msg)
-    return Finder()
+
+    return finder_class()

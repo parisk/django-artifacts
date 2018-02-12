@@ -3,7 +3,7 @@ Settings for Artifacts are all namespaced in the ARTIFACTS setting.
 For example your project's `settings.py` file might look like this:
 
 ARTIFACTS = {
-    'WEBPACK_FINDERS': [
+    'BUILD_ENVIRONMENT_FINDERS': [
         'artifacts.finders.WebpackAutoFinder',
     ],
     'HASHING_IGNORE_PATTERNS': [
@@ -31,7 +31,7 @@ DEFAULTS = {
         r'.*/yarn\.lock$',
     ],
     'NODE_PATH': 'node',
-    'WEBPACK_FINDERS': [
+    'BUILD_ENVIRONMENT_FINDERS': [
         'artifacts.finders.WebpackAutoFinder',
     ],
 }
@@ -39,7 +39,7 @@ DEFAULTS = {
 
 # List of settings that may be in string import notation.
 IMPORT_STRINGS = (
-    'WEBPACK_FINDERS',
+    'BUILD_ENVIRONMENT_FINDERS',
 )
 
 
@@ -51,7 +51,7 @@ class ArtifactsSettings:
     For example:
 
         from artifacts.settings import artifacts_settings
-        print(artifacts_settings.WEBPACK_FINDERS)
+        print(artifacts_settings.BUILD_ENVIRONMENT_FINDERS)
 
     Any setting with string import paths will be automatically resolved
     and return the class, rather than the string literal.
