@@ -17,9 +17,12 @@ This module provides the `api_setting` object, that is used to access
 REST framework settings, checking for user settings first, then falling
 back to the defaults.
 """
+import functools
+
 from django.conf import settings
 from django.test.signals import setting_changed
 from django.utils.module_loading import import_string
+
 
 DEFAULTS = {
     'HASHING_IGNORE_PATTERNS': [
@@ -57,7 +60,6 @@ class ArtifactsSettings:
         self._user_settings = user_settings if user_settings else {}
         self.defaults = defaults or DEFAULTS
         self.import_strings = import_strings or IMPORT_STRINGS
-        self._cached_attrs = set()
 
     @property
     def user_settings(self):
@@ -65,6 +67,7 @@ class ArtifactsSettings:
             self._user_settings = getattr(settings, 'ARTIFACTS', {})
         return self._user_settings
 
+    @functools.lru_cache(maxsize=None)
     def __getattr__(self, attr):
         if attr not in self.defaults:
             raise AttributeError("Invalid API setting: '%s'" % attr)
@@ -82,15 +85,11 @@ class ArtifactsSettings:
                 [import_string(v) for v in val]
             )
 
-        # Cache the result
-        self._cached_attrs.add(attr)
-        setattr(self, attr, val)
         return val
 
     def reload(self):
-        for attr in self._cached_attrs:
-            delattr(self, attr)
-        self._cached_attrs.clear()
+        self.__getattr_.clear_cache()
+
         if hasattr(self, '_user_settings'):
             delattr(self, '_user_settings')
 
