@@ -5,6 +5,7 @@ import os
 from django.contrib.staticfiles.storage import StaticFilesStorage
 from django.utils.module_loading import import_string
 
+from . import environments
 from .settings import artifacts_settings
 
 
@@ -38,18 +39,6 @@ class WebpackAutoFinder(BaseFinder):
 
         return ('webpack' in dependencies) or ('webpack' in dev_dependencies)
 
-    def get_webpack_paths(self, webpack_root):
-        """
-        """
-        _webpack_config = 'webpack.config.js'
-        _webpack_config_path = os.path.join(webpack_root, _webpack_config)
-        webpack_bin = 'node_modules/webpack/bin/webpack.js'
-        webpack_config = _webpack_config if self.storage.exists(
-            _webpack_config_path,
-        ) else None
-
-        return webpack_root, webpack_bin, webpack_config
-
     def list(self):
         """
         """
@@ -60,8 +49,10 @@ class WebpackAutoFinder(BaseFinder):
 
             if self.storage.exists(package_json_path):
                 if self.package_depends_on_webpack(package_json_path):
-                    webpack_paths = self.get_webpack_paths(directory)
-                    yield webpack_paths, self.storage
+                    environment = environments.WebpackBuildEnvironment(
+                        self.storage, directory,
+                    )
+                    yield environment
 
 
 def get_finders():

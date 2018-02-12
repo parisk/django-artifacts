@@ -4,7 +4,7 @@ import re
 
 from django.contrib.staticfiles.storage import ManifestStaticFilesStorage
 
-from . import environments, finders
+from .finders import get_finders
 from .settings import artifacts_settings
 
 
@@ -33,17 +33,8 @@ class ArtifactsStorage(ManifestStaticFilesStorage):
     def environments(self):
         """
         """
-        for finder in finders.get_finders():
-            for webpack_paths, storage in finder.list():
-                webpack_root, webpack_bin, webpack_config = webpack_paths
-                environment = environments.WebpackBuildEnvironment(
-                    storage,
-                    webpack_root,
-                    webpack_bin,
-                    webpack_config,
-                    artifacts_settings.NODE_PATH,
-                )
-                yield environment
+        for finder in get_finders():
+            yield from finder.list()
 
     def build_artifacts(self):
         """

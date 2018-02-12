@@ -2,29 +2,45 @@ import json
 import os
 import subprocess
 
+from .settings import artifacts_settings
 
-class WebpackBuildEnvironment:
+
+class BuildEnvironment:
     """
     """
 
-    def __init__(self, storage, webpack_root, webpack_bin, webpack_config, node_path):
-        """
-        """
-        self._storage = storage
-        self._webpack_root = webpack_root
-        self.webpack_bin = webpack_bin
-        self.webpack_config = webpack_config
-        self.node_path = node_path
+    def __init__(self, storage, path, options={}):
+        self.storage = storage
+        self.path = path
+        self.options = options
+
+
+class WebpackBuildEnvironment(BuildEnvironment):
+    """
+    """
+
+    @property
+    def webpack_bin(self):
+        default_webpack_bin = 'node_modules/webpack/bin/webpack.js'
+        return self.options.get('webpack_bin', default_webpack_bin)
+
+    @property
+    def webpack_config(self):
+        return self.options.get('webpack_config')
+
+    @property
+    def node_path(self):
+        return self.options.get('node_path', artifacts_settings.NODE_PATH)
 
     @property
     def label(self):
-        return f'[webpack build environment in {self._webpack_root}]'
+        return f'[webpack build environment in {self.path}]'
 
     @property
     def webpack_root(self):
         """
         """
-        return self._storage.path(self._webpack_root)
+        return self.storage.path(self.path)
 
     @property
     def _cmd(self):
@@ -44,7 +60,7 @@ class WebpackBuildEnvironment:
 
         if output_path.startswith(f'{self.webpack_root}/'):
             output_path = output_path[len(f'{self.webpack_root}/'):]
-            output_path = os.path.join(self._webpack_root, output_path)
+            output_path = os.path.join(self.path, output_path)
 
         for chunk in json_output['chunks']:
             yield from [
