@@ -69,7 +69,7 @@ def get_webpack_finders():
     """
     """
     finders =  [
-        get_finder(Finder) for Finder in artifacts_settings.WEBPACK_FINDERS,
+        get_finder(Finder) for Finder in artifacts_settings.WEBPACK_FINDERS
     ]
 
     yield from finders

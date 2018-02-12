@@ -30,7 +30,7 @@ class ArtifactsStorage(ManifestStaticFilesStorage):
         )
 
     @property
-    def _webpack_builders(self):
+    def _builders(self):
         """
         """
         for finder in finders.get_webpack_finders():
@@ -45,20 +45,25 @@ class ArtifactsStorage(ManifestStaticFilesStorage):
                 )
                 yield builder
 
+    def build_artifacts(self):
+        """
+        """
+        for builder in self._builders:
+            builder.build()
+
+            yield from [(builder, artifact) for artifact in builder.artifacts]
+
     def post_process(self, paths, **options):
         """
         """
         _paths = OrderedDict()
 
-        for builder in self._webpack_builders:
-            builder.build()
-
-            for artifact in builder.artifacts:
-                _paths[artifact] = self, artifact
-                original_path = f'[webpack build in {builder._webpack_root}]'
-                processed_path = artifact
-                processed = True
-                yield original_path, processed_path, processed
+        for builder, artifact in self._artifacts:
+            _paths[artifact] = self, artifact
+            original_path = f'[webpack build in {builder._webpack_root}]'
+            processed_path = artifact
+            processed = True
+            yield original_path, processed_path, processed
 
         for path in self._sieve_paths_not_for_hashing(paths):
             _paths[path] = paths[path]
