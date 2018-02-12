@@ -5,26 +5,13 @@ import os
 from django.contrib.staticfiles.storage import StaticFilesStorage
 from django.utils.module_loading import import_string
 
+from .settings import artifacts_settings
+
 
 class BaseFinder:
     """
     A base file finder to be used for custom artifacts finder classes.
     """
-    def check(self, **kwargs):
-        raise NotImplementedError(
-            'subclasses may provide a check() method to verify the finder is '
-            'configured correctly.'
-        )
-
-    def find(self, path, all=False):
-        """
-        Given a relative file path, find an absolute file path.
-        If the ``all`` parameter is False (default) return only the first
-        found file path; if True, return a list of all found files paths.
-        """
-        msg = 'subclasses of BaseFinder must provide a find() method'
-        raise NotImplementedError(msg)
-
     def list(self, ignore_patterns):
         """
         Given an optional list of paths to ignore, return a two item iterable
@@ -69,21 +56,20 @@ class WebpackAutoFinder(BaseFinder):
                     yield paths, self.storage
 
 
-def get_finders(finder_path_list):
+def get_webpack_finders():
     """
-    ...
     """
-    for finder_path in finder_path_list:
-        yield get_finder(finder_path)
+    yield from [
+        get_finder(Finder) for Finder in artifacts_settings.WEBPACK_FINDERS
+    ]
 
 
 @functools.lru_cache(maxsize=None)
-def get_finder(import_path):
+def get_finder(Finder):
     """
-    Import the artifacts finder class described by import_path, where
-    import_path is the full Python path to the class.
+    Return an instance of the given Finder class, after verifying that it is
+    a subclass of BaseFinder
     """
-    Finder = import_string(import_path)
     if not issubclass(Finder, BaseFinder):
         msg = f'Finder "{Finder}" is not a subclass of "{BaseFinder}"'
         raise ImproperlyConfigured(msg)
