@@ -34,10 +34,9 @@ class BaseFinder:
         raise NotImplementedError(msg)
 
 
-class WebpackDirectoryAutoFinder(BaseFinder):
+class WebpackAutoFinder(BaseFinder):
     """
-    A static files finder that uses the ``WEBPACK_DIRS`` setting
-    to locate files.
+    ...
     """
     def __init__(self, storage=None):
         self.storage = storage or StaticFilesStorage()

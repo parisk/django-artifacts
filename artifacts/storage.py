@@ -10,9 +10,9 @@ from . import finders
 
 NODE_PATH = 'node'
 WEBPACK_FINDERS = [
-    'artifacts.finders.WebpackDirectoryAutoFinder',
+    'artifacts.finders.WebpackAutoFinder',
 ]
-IGNORE_PATTERNS = [
+HASHING_IGNORE_PATTERNS = [
     r'.*/node_modules/.*',
     r'.*/package(-lock)?\.json$',
     r'.*/yarn\.lock$',
@@ -27,14 +27,10 @@ class ArtifactsStorage(ManifestStaticFilesStorage):
         """
         """
         for path in paths:
-            matches = False
-
-            for pattern in ignore_patterns:
-                if re.match(pattern, path):
-                    matches = True
-                    break
-
-            if not matches:
+            should_not_be_ignored = not any(
+                [re.match(pattern, path) for pattern in ignore_patterns],
+            )
+            if should_not_be_ignored:
                 yield path
 
     def post_process(self, paths, **options):
@@ -43,26 +39,25 @@ class ArtifactsStorage(ManifestStaticFilesStorage):
         _paths = OrderedDict()
 
         for finder in finders.get_finders(WEBPACK_FINDERS):
-            for (directory, webpack_bin, config), storage in finder.list():
-                working_dir = storage.path(directory)
-                webpack_bin_path = os.path.join(working_dir, webpack_bin)
-
-                if config:
-                    config = os.path.join(working_dir, config)
-
+            for webpack_paths, storage in finder.list():
+                webpack_root, webpack_bin, webpack_config = webpack_paths
                 builder = builders.WebpackBuilder(
-                    working_dir, webpack_bin_path, config, NODE_PATH,
+                    storage,
+                    webpack_root,
+                    webpack_bin,
+                    webpack_config,
+                    NODE_PATH,
                 )
                 builder.build()
 
                 for artifact in builder.artifacts:
                     _paths[artifact] = self, artifact
-                    original_path = f'[webpack build in {directory}]'
+                    original_path = f'[webpack build in {webpack_root}]'
                     processed_path = artifact
                     processed = True
                     yield original_path, processed_path, processed
 
-        for path in self._sieve_paths(paths.keys(), IGNORE_PATTERNS):
+        for path in self._sieve_paths(paths.keys(), HASHING_IGNORE_PATTERNS):
             _paths[path] = paths[path]
 
         yield from super().post_process(_paths, **options)

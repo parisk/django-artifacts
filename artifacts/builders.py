@@ -7,24 +7,27 @@ class WebpackBuilder:
     """
     """
 
-    def __init__(self, working_dir, webpack, configuration, node):
+    def __init__(self, storage, webpack_root, webpack_bin, webpack_config, node_path):
         """
         """
-        self.working_dir = working_dir
-        self.webpack = webpack
-        self.configuration = configuration
-        self.node = node
+        self._storage = storage
+        self._webpack_root = webpack_root
+        self.webpack_bin = webpack_bin
+        self.webpack_config = webpack_config
+        self.node_path = node_path
+
+    @property
+    def webpack_root(self):
+        """
+        """
+        return self._storage.path(self._webpack_root)
 
     @property
     def _cmd(self):
         """
         """
-        cmd = [self.node, self.webpack, '--json']
-
-        if self.configuration:
-            cmd += ['-c', self.configuration]
-        else:
-            cmd += [self.working_dir]
+        cmd = [self.node_path, self.webpack_bin, '--json']
+        cmd += ['-c', self.webpack_config] if self.webpack_config else ['.']
 
         return cmd
 
@@ -34,6 +37,10 @@ class WebpackBuilder:
         """
         json_output = json.loads(self._process.stdout)
         output_path = json_output['outputPath']
+
+        if output_path.startswith(f'{self.webpack_root}/'):
+            output_path = output_path[len(f'{self.webpack_root}/'):]
+            output_path = os.path.join(self._webpack_root, output_path)
 
         for chunk in json_output['chunks']:
             for chunk_file in chunk['files']:
@@ -47,7 +54,7 @@ class WebpackBuilder:
                 self._cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                cwd=self.working_dir,
+                cwd=self.webpack_root,
             )
 
         return bool(self._process.returncode)
