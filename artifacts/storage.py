@@ -55,7 +55,7 @@ class ArtifactsStorage(ManifestStaticFilesStorage):
 
             for artifact in builder.artifacts:
                 _paths[artifact] = self, artifact
-                original_path = f'[webpack build in {webpack_root}]'
+                original_path = f'[webpack build in {builder._webpack_root}]'
                 processed_path = artifact
                 processed = True
                 yield original_path, processed_path, processed
