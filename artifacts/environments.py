@@ -26,7 +26,11 @@ class WebpackBuildEnvironment(BuildEnvironment):
 
     @property
     def webpack_config(self):
-        return self.options.get('webpack_config')
+        config_file = 'webpack.config.js'
+        default_webpack_config = config_file if (
+            self.storage.exists(config_file)
+        ) else None
+        return self.options.get('webpack_config', default_webpack_config)
 
     @property
     def node_path(self):
