@@ -12,7 +12,7 @@ class BaseFinder:
     """
     A base file finder to be used for custom artifacts finder classes.
     """
-    def list(self, ignore_patterns):
+    def list(self):
         """
         Given an optional list of paths to ignore, return a two item iterable
         consisting of the relative path and storage instance.
@@ -28,40 +28,51 @@ class WebpackAutoFinder(BaseFinder):
     def __init__(self, storage=None):
         self.storage = storage or StaticFilesStorage()
 
+    def package_depends_on_webpack(self, package_json_path):
+        """
+        """
+        with self.storage.open(package_json_path) as package_json_file:
+            package_json = json.loads(package_json_file.read())
+            dependencies = package_json['dependencies'].keys()
+            dev_dependencies = package_json['devDependencies'].keys()
+
+        return ('webpack' in dependencies) or ('webpack' in dev_dependencies)
+
+    def get_webpack_paths(self, webpack_root):
+        """
+        """
+        _webpack_config = 'webpack.config.js'
+        _webpack_config_path = os.path.join(webpack_root, _webpack_config)
+        webpack_bin = 'node_modules/webpack/bin/webpack.js'
+        webpack_config = _webpack_config if self.storage.exists(
+            _webpack_config_path,
+        ) else None
+
+        return webpack_root, webpack_bin, webpack_config
+
     def list(self):
+        """
+        """
         directories, files = self.storage.listdir('')
 
         for directory in directories:
             package_json_path = os.path.join(directory, 'package.json')
 
             if self.storage.exists(package_json_path):
-                package_json_contents = self.storage.open(package_json_path)
-                package_json = json.loads(package_json_contents.read())
-                dependencies = package_json['dependencies'].keys()
-                dev_dependencies = package_json['devDependencies'].keys()
-                webpack_in_dependencies = 'webpack' in dependencies
-                webpack_in_dev_dependencies = 'webpack' in dev_dependencies
+                if self.package_depends_on_webpack(package_json_path):
+                    webpack_paths = self.get_webpack_paths(directory)
 
-                if (webpack_in_dependencies or webpack_in_dev_dependencies):
-                    webpack_working_dir = self.storage.path(directory)
-                    webpack_bin = 'node_modules/webpack/bin/webpack.js'
-                    webpack_configuration = None
-                    webpack_configuration_path = 'webpack.config.js'
-
-                    if self.storage.exists(webpack_configuration_path):
-                        webpack_configuration = webpack_configuration_path
-
-                    paths = directory, webpack_bin, webpack_configuration
-
-                    yield paths, self.storage
+                    yield webpack_paths, self.storage
 
 
 def get_webpack_finders():
     """
     """
-    yield from [
-        get_finder(Finder) for Finder in artifacts_settings.WEBPACK_FINDERS
+    finders =  [
+        get_finder(Finder) for Finder in artifacts_settings.WEBPACK_FINDERS,
     ]
+
+    yield from finders
 
 
 @functools.lru_cache(maxsize=None)
