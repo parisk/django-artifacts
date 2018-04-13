@@ -67,7 +67,7 @@ class ArtifactsSettings:
 
     @property
     def user_settings(self):
-        if not hasattr(self, '_user_settings'):
+        if not self._user_settings:
             self._user_settings = getattr(settings, 'ARTIFACTS', {})
         return self._user_settings
 

@@ -3,7 +3,8 @@ import functools
 import os
 import re
 
-from azure.storage.blob.blobservice import BlobService
+from azure.storage.blob import BlockBlobService
+from django.conf import settings
 from django.contrib.staticfiles.storage import ManifestStaticFilesStorage
 
 from .finders import get_finders
@@ -70,6 +71,12 @@ class ArtifactsAzureStorage(ArtifactsStorage):
     azure_container = artifacts_settings.AZURE_CONTAINER
     azure_ssl = artifacts_settings.AZURE_SSL
 
+    @property
+    @functools.lru_cache()
+    def connection(self):
+        blob_service = BlockBlobService(self.account_name, self.account_key)
+        return blob_service
+
     def post_process(self, paths, **options):
         """
         Uploads the given path to the Azure container defined in the settings.
@@ -78,4 +85,11 @@ class ArtifactsAzureStorage(ArtifactsStorage):
 
         for original_path, processed_path, processed in paths_to_be_uploaded:
             yield original_path, processed_path, processed
+
             print(f'Uploading to Azure: {processed_path}')
+
+            self.connection.create_blob_from_path(
+                self.azure_container,
+                processed_path,
+                os.path.join(settings.STATIC_ROOT, processed_path),
+            )
