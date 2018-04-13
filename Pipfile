@@ -13,3 +13,4 @@ azure = "*"
 artifacts = {path = ".", editable = true}
 ipython = "*"
 secretstorage = "*"
+sec = "*"
