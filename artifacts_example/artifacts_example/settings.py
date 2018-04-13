@@ -124,7 +124,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(os.pardir, 'dist', 'static')
+STATIC_ROOT = os.getenv(
+    'STATIC_ROOT',
+    os.path.join(os.pardir, 'dist', 'static'),
+)
 STATICFILES_STORAGE = 'artifacts.storage.ArtifactsAzureStorage'
 
 # Artifacts settings

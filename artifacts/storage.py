@@ -93,3 +93,10 @@ class ArtifactsAzureStorage(ArtifactsStorage):
                 processed_path,
                 os.path.join(settings.STATIC_ROOT, processed_path),
             )
+
+        print(f'Uploading to Azure: staticfiles.json')
+        self.connection.create_blob_from_path(
+            self.azure_container,
+            processed_path,
+            os.path.join(settings.STATIC_ROOT, 'staticfiles.json'),
+        )
