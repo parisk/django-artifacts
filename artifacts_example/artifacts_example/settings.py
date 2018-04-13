@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import os
 
+import sec
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -123,9 +125,12 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(os.pardir, 'dist', 'static')
-STATICFILES_STORAGE = 'artifacts.storage.ArtifactsStorage'
+STATICFILES_STORAGE = 'artifacts.storage.ArtifactsAzureStorage'
 
 # Artifacts settings
 ARTIFACTS = {
-    'NODE_PATH': '/usr/local/bin/node'
+    'NODE_PATH': '/usr/local/bin/node',
+    'AZURE_ACCOUNT_KEY': sec.load('azure_account_key'),
+    'AZURE_ACCOUNT_NAME': sec.load('azure_account_name'),
+    'AZURE_CONTAINER': sec.load('azure_container'),
 }

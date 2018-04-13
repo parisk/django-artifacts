@@ -34,6 +34,10 @@ DEFAULTS = {
     'BUILD_ENVIRONMENT_FINDERS': [
         'artifacts.finders.WebpackAutoFinder',
     ],
+    'AZURE_ACCOUNT_KEY': None,
+    'AZURE_ACCOUNT_NAME': None,
+    'AZURE_CONTAINER': None,
+    'AZURE_SSL': True,
 }
 
 

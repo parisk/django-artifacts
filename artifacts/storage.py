@@ -1,7 +1,9 @@
 from collections import OrderedDict
+import functools
 import os
 import re
 
+from azure.storage.blob.blobservice import BlobService
 from django.contrib.staticfiles.storage import ManifestStaticFilesStorage
 
 from .finders import get_finders
@@ -58,3 +60,22 @@ class ArtifactsStorage(ManifestStaticFilesStorage):
             next_paths[path] = paths[path]
 
         yield from super().post_process(next_paths, **options)
+
+
+class ArtifactsAzureStorage(ArtifactsStorage):
+    """
+    """
+    account_name = artifacts_settings.AZURE_ACCOUNT_NAME
+    account_key = artifacts_settings.AZURE_ACCOUNT_KEY
+    azure_container = artifacts_settings.AZURE_CONTAINER
+    azure_ssl = artifacts_settings.AZURE_SSL
+
+    def post_process(self, paths, **options):
+        """
+        Uploads the given path to the Azure container defined in the settings.
+        """
+        paths_to_be_uploaded = super().post_process(paths, **options)
+
+        for original_path, processed_path, processed in paths_to_be_uploaded:
+            yield original_path, processed_path, processed
+            print(f'Uploading to Azure: {processed_path}')
