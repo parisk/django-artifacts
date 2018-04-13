@@ -4,7 +4,7 @@
 
 [packages]
 
-django = "*"
+Django = "*"
 azure = "*"
 
 
@@ -12,5 +12,4 @@ azure = "*"
 
 artifacts = {path = ".", editable = true}
 ipython = "*"
-secretstorage = "*"
 sec = "*"
